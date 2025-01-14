@@ -56,6 +56,7 @@ class UssdAccessibilityService : AccessibilityService() {
             if (editText != null) {
                 // Insérer le texte
                 val bundle = Bundle()
+                editText.performAction(AccessibilityNodeInfo.ACTION_FOCUS)
                 bundle.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, message)
                 val setTextSuccess = editText.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, bundle)
                 println("Set text action performed: $setTextSuccess")
