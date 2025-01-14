@@ -39,19 +39,31 @@ class UssdAccessibilityService : AccessibilityService() {
     }
 
     // Effectue la réponse dans la session USSD
-    private fun performReply() {
+    private fun performReply(retryCount :Int = 0) {
+
+            if (retryCount > 3) {
+        println("Max retries reached. Aborting.")
+        return
+    }
+
 
         try{
             if (pendingMessages.isEmpty()) return
 
             val message = pendingMessages.removeFirstOrNull()
             println("Performing reply with message: $message")
-
-            val rootInActiveWindow = this.rootInActiveWindow ?: return
+            Handler(Looper.getMainLooper()).postDelayed({
+            val rootInActiveWindow = this.rootInActiveWindow ?: return@postDelayed
             println("Root in active window: $rootInActiveWindow")
 
             // Chercher le champ de saisie
             val editText = findInputField(rootInActiveWindow)
+
+                  if (editText == null) {
+            println("Input field not found, retrying...")
+            performReply(retryCount + 1)
+            return@postDelayed
+        }
 
             if (editText != null) {
                 // Insérer le texte
@@ -60,7 +72,7 @@ class UssdAccessibilityService : AccessibilityService() {
                 bundle.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, message)
                 val setTextSuccess = editText.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, bundle)
                 println("Set text action performed: $setTextSuccess")
-
+            },800)
                 // Chercher et cliquer sur le bouton de confirmation
                 val button = findConfirmButton(rootInActiveWindow)
                 if (button != null) {
@@ -222,6 +234,8 @@ private fun findInputField(root: AccessibilityNodeInfo): AccessibilityNodeInfo? 
 
             if (event?.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED ||
                 event?.eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
+
+                 Handler(Looper.getMainLooper()).postDelayed({
                 val nodeInfo = event.source
                 if (nodeInfo != null) {
                     val ussdMessage = findUssdMessage(nodeInfo)
@@ -236,6 +250,7 @@ private fun findInputField(root: AccessibilityNodeInfo): AccessibilityNodeInfo? 
 
                     nodeInfo.recycle()
                 }
+                 },1000)
             }
         } catch (e: Exception) {
             println("UssdAccessibilityService ::: Error in onAccessibilityEvent ::: $e")
