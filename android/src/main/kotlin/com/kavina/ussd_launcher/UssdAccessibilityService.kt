@@ -82,10 +82,32 @@ class UssdAccessibilityService : AccessibilityService() {
     }
 
     // Trouve le champ de saisie dans l'interface USSD
-    private fun findInputField(root: AccessibilityNodeInfo): AccessibilityNodeInfo? {
-        val editTexts = findNodesByClassName(root, "android.widget.EditText")
-        return editTexts.firstOrNull()
+private fun findInputField(root: AccessibilityNodeInfo): AccessibilityNodeInfo? {
+    // Common USSD input view classes
+    val targetClassNames = listOf(
+        "android.widget.EditText",
+        "android.widget.TextView",
+        // Samsung often uses this
+        "android.widget.CustomEditText",
+        // Some devices use these
+        "android.widget.NumberPicker",
+        "android.widget.ImeEditText"
+    )
+    
+    // Try to find nodes by each possible class name
+    for (className in targetClassNames) {
+        val nodes = findNodesByClassName(root, className)
+        val inputNode = nodes.firstOrNull { node ->
+            // Additional checks to verify it's likely a USSD input
+            node.isEditable || 
+            node.isFocused || 
+            node.isClickable
+        }
+        if (inputNode != null) return inputNode
     }
+    
+    return null
+}
 
     // Trouve le bouton de confirmation dans l'interface USSD
     private fun findConfirmButton(root: AccessibilityNodeInfo): AccessibilityNodeInfo? {
