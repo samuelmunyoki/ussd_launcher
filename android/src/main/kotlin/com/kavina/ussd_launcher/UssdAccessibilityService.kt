@@ -38,89 +38,85 @@ class UssdAccessibilityService : AccessibilityService() {
         }
     }
 
-    // Effectue la réponse dans la session USSD
-    private fun performReply(retryCount :Int = 0) {
+    private fun performReply(retryCount: Int = 0) {
+        if (retryCount > 3) {
+            println("Max retries reached. Aborting.")
+            return
+        }
 
-            if (retryCount > 3) {
-        println("Max retries reached. Aborting.")
-        return
-    }
-
-
-        try{
+        try {
             if (pendingMessages.isEmpty()) return
 
             val message = pendingMessages.removeFirstOrNull()
             println("Performing reply with message: $message")
+            
             Handler(Looper.getMainLooper()).postDelayed({
-            val rootInActiveWindow = this.rootInActiveWindow ?: return@postDelayed
-            println("Root in active window: $rootInActiveWindow")
-
-            // Chercher le champ de saisie
-            val editText = findInputField(rootInActiveWindow)
-
-                  if (editText == null) {
-            println("Input field not found, retrying...")
-            performReply(retryCount + 1)
-            return@postDelayed
-        }
-
-            if (editText != null) {
-                // Insérer le texte
+                val rootInActiveWindow = this.rootInActiveWindow ?: return@postDelayed
+                println("Root in active window: $rootInActiveWindow")
+        
+                // Find the input field
+                val editText = findInputField(rootInActiveWindow)
+                if (editText == null) {
+                    println("Input field not found, retrying...")
+                    performReply(retryCount + 1)
+                    return@postDelayed
+                }
+        
+                // Insert the text into the input field
                 val bundle = Bundle()
                 editText.performAction(AccessibilityNodeInfo.ACTION_FOCUS)
                 bundle.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, message)
                 val setTextSuccess = editText.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, bundle)
                 println("Set text action performed: $setTextSuccess")
-            },800)
-                // Chercher et cliquer sur le bouton de confirmation
+        
+                // Find and click the confirm button
                 val button = findConfirmButton(rootInActiveWindow)
                 if (button != null) {
                     val clickSuccess = button.performAction(AccessibilityNodeInfo.ACTION_CLICK)
                     println("Click action performed: $clickSuccess")
-                    // Attendre un court instant avant d'envoyer le message suivant
+                    // Wait before sending the next message
                     Handler(Looper.getMainLooper()).postDelayed({
                         performReply()
-                    }, 3000) // 3 secondes de délai, ajustez si nécessaire
+                    }, 3000) // 3 second delay; adjust if needed
                 } else {
                     println("Confirm button not found, trying alternative methods")
                     tryAlternativeConfirmMethods(rootInActiveWindow)
                 }
-            } else {
-                println("Input field not found")
-            }
-        }catch(e: Exception){
+            }, 800) // Delay of 800ms before executing the above block
+            
+        } catch(e: Exception) {
             println("performReply ::: Error in performReply ::: $e")
         }
     }
 
-    // Trouve le champ de saisie dans l'interface USSD
-private fun findInputField(root: AccessibilityNodeInfo): AccessibilityNodeInfo? {
-    // Common USSD input view classes
-    val targetClassNames = listOf(
-        "android.widget.EditText",
-        "android.widget.TextView",
-        // Samsung often uses this
-        "android.widget.CustomEditText",
-        // Some devices use these
-        "android.widget.NumberPicker",
-        "android.widget.ImeEditText"
-    )
-    
-    // Try to find nodes by each possible class name
-    for (className in targetClassNames) {
-        val nodes = findNodesByClassName(root, className)
-        val inputNode = nodes.firstOrNull { node ->
-            // Additional checks to verify it's likely a USSD input
-            node.isEditable || 
-            node.isFocused || 
-            node.isClickable
+
+        // Trouve le champ de saisie dans l'interface USSD
+    private fun findInputField(root: AccessibilityNodeInfo): AccessibilityNodeInfo? {
+        // Common USSD input view classes
+        val targetClassNames = listOf(
+            "android.widget.EditText",
+            "android.widget.TextView",
+            // Samsung often uses this
+            "android.widget.CustomEditText",
+            // Some devices use these
+            "android.widget.NumberPicker",
+            "android.widget.ImeEditText"
+        )
+        
+        // Try to find nodes by each possible class name
+        for (className in targetClassNames) {
+            val nodes = findNodesByClassName(root, className)
+            val inputNode = nodes.firstOrNull { node ->
+                // Additional checks to verify it's likely a USSD input
+                node.isEditable || 
+                node.isFocused || 
+                node.isClickable
+            }
+            if (inputNode != null) return inputNode
         }
-        if (inputNode != null) return inputNode
+        
+        return null
     }
-    
-    return null
-}
 
     // Trouve le bouton de confirmation dans l'interface USSD
     private fun findConfirmButton(root: AccessibilityNodeInfo): AccessibilityNodeInfo? {

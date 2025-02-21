@@ -61,7 +61,7 @@ class _SingleSessionTabState extends State<SingleSessionTab> {
     if (status.isGranted) {
       try {
         final simCards = await UssdLauncher.getSimCards();
-        // print("simCards --------------------- $simCards");
+        print("simCards --------------------- $simCards");
         setState(() {
           _simCards = simCards;
           if (simCards.isNotEmpty) {
@@ -178,7 +178,7 @@ class _MultiSessionTabState extends State<MultiSessionTab> {
       // Ne garder que le dernier message
       _ussdMessages = [message];
       if (message.contains("completed") || message.contains("cancelled")) {
-        _sessionStatus = "Session USSD terminée.";
+        _sessionStatus = "Session USSD terminated.";
       }
     });
   }
