@@ -81,24 +81,24 @@ class UssdLauncherPlugin: FlutterPlugin, MethodCallHandler {
                     result.error("INVALID_ARGUMENT", "USSD code is required", null)
                 }
             }
-            // "sendMessage" -> {
-            //     val message = call.argument<String>("message")
-            //     if (message != null) {
-            //         ussdMultiSession.sendMessage(message, result)
-            //     } else {
-            //         result.error("INVALID_ARGUMENT", "Message is required", null)
-            //     }
-            // }
-            // "cancelSession" -> {
-            //     ussdMultiSession.cancelSession(result)
-            // }
-            // "isAccessibilityPermissionEnabled" -> {
-            //     result.success(isAccessibilityServiceEnabled())
-            // }
-            // "openAccessibilitySettings" -> {
-            //     openAccessibilitySettings()
-            //     result.success(null)
-            // }
+            "sendMessage" -> {
+                val message = call.argument<String>("message")
+                if (message != null) {
+                    ussdMultiSession.sendMessage(message, result)
+                } else {
+                    result.error("INVALID_ARGUMENT", "Message is required", null)
+                }
+            }
+            "cancelSession" -> {
+                ussdMultiSession.cancelSession(result)
+            }
+            "isAccessibilityPermissionEnabled" -> {
+                result.success(isAccessibilityServiceEnabled())
+            }
+            "openAccessibilitySettings" -> {
+                openAccessibilitySettings()
+                result.success(null)
+            }
             "getSimCards" -> {
                 ussdSessionUnique.getSimCards(result)
             }

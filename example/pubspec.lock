@@ -303,9 +303,11 @@ packages:
   ussd_launcher:
     dependency: "direct main"
     description:
-      path: ".."
-      relative: true
-    source: path
+      path: "."
+      ref: master
+      resolved-ref: "96b0244470c63d928d5f0989039424b00d506f68"
+      url: "https://github.com/samuelmunyoki/ussd_launcher.git"
+    source: git
     version: "1.2.7"
   vector_math:
     dependency: transitive
